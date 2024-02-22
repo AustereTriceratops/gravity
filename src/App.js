@@ -1,24 +1,22 @@
-import logo from './logo.svg';
-import './App.css';
+import { useEffect, useRef } from "react";
+import SceneManager from "./SceneManager";
 
-function App() {
+export const App = () => {
+  const canvasRef = useRef();
+  const programRef = useRef();
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+
+    if (canvas) {
+      programRef.current = new SceneManager(canvas);
+    }
+  }, [])
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <canvas
+      ref={canvasRef}
+    />
   );
 }
 
