@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import SceneManager from "./SceneManager";
 
 export const App = () => {
@@ -13,8 +13,27 @@ export const App = () => {
     }
   }, [])
 
+  // MOUSE MOVEMENT
+
+  const [mouseX, setMouseX] = useState(0);
+  const [mouseY, setMouseY] = useState(0);
+
+  const mouseMove = (ev) => {
+    setMouseX(ev.pageX);
+    setMouseY(ev.pageY);
+  }
+
+  useEffect(() => {
+    const program = programRef.current;
+
+    if (program) {
+      program.render(mouseX, mouseY);
+    }
+  }, [mouseX, mouseY])
+
   return (
     <canvas
+      onMouseMove={mouseMove}
       ref={canvasRef}
     />
   );
