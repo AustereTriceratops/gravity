@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { Vector3 } from 'three';
 
-const generateTrajectories = (r, phi, d_phi=0.05, n_rays=50) => {
+const generateTrajectories = (r, phi, d_phi=0.05, n_rays=40) => {
     const x_traj = [];
     const y_traj = [];
 
@@ -11,7 +11,7 @@ const generateTrajectories = (r, phi, d_phi=0.05, n_rays=50) => {
         let u = 1/r;
     
         let phi_ = phi;
-        let u_dot = - Math.tan(0.0001 + Math.PI*(i/(n_rays-1) - 1/2))*u; //d_u/d_phi
+        let u_dot = u * Math.tan(Math.PI*(0.3 + 0.2*i/(n_rays-1))); //d_u/d_phi
     
         const x = [Math.cos(phi_)/u];
         const y = [Math.sin(phi_)/u];
@@ -21,7 +21,7 @@ const generateTrajectories = (r, phi, d_phi=0.05, n_rays=50) => {
             u += u_dot*d_phi*fac;
             phi_ += d_phi*fac;
     
-            if (u < 0 || u > 1){
+            if (u < 0.001 || u > 1){
                 break;
             }
     
@@ -42,12 +42,10 @@ class SceneManager {
         this.width = window.innerWidth;
         this.height = window.innerHeight;
         this.aspect = this.width/this.height;
-        this.scl = 8.0;
+        this.scl = 20.0;
 
         this.setup();
-        this.addMaterials();
         this.addMeshes();
-        this.render();
     }
 
     setup() {
@@ -61,27 +59,23 @@ class SceneManager {
         this.renderer.setClearColor( 0x444444, 1 );
     }
 
-    addMaterials() {
-        this.blackMaterial = new THREE.MeshBasicMaterial({color: 0x000000});
-        this.lineMaterial = new THREE.LineBasicMaterial({color: 0xffffff});
-    }
-
     addMeshes() {
         const geometry = new THREE.CircleGeometry(1);
+        const blackMaterial = new THREE.MeshBasicMaterial({color: 0x000000});
 
-        const mesh = new THREE.Mesh(geometry, this.blackMaterial);
+        const mesh = new THREE.Mesh(geometry, blackMaterial);
         mesh.name = "event horizon";
 
         this.scene.add(mesh);
 
-
         this.lineMeshes = [];
 
-        for (let i = 0; i < 100; i++) {
+        for (let i = 0; i < 80; i++) {
             const points = [new Vector3()];
             const lineGeometry = new THREE.BufferGeometry().setFromPoints(points);
+            const lineMaterial = new THREE.LineBasicMaterial({color: 0xcf8bed})
     
-            let l = new THREE.Line(lineGeometry, this.lineMaterial);
+            let l = new THREE.Line(lineGeometry, lineMaterial);
             l.name = `trajectory_${i}`;
 
             this.lineMeshes.push(l);
@@ -101,6 +95,14 @@ class SceneManager {
             });
             
             this.lineMeshes[i].geometry.setFromPoints(trajectories[i]);
+
+            const [lastPoint] = trajectories[i].slice(-1);
+            
+            if (lastPoint.length() < 1.5) {
+                this.lineMeshes[i].material.color.set(0x000000);
+            } else {
+                this.lineMeshes[i].material.color.set(0xcf8bed);
+            }
         })
     }
 
@@ -121,7 +123,6 @@ class SceneManager {
     }
 
     euclideanCoordsToPolar(x, y) {
-        const fac = (x < 0) ? -1 : 1;
         const r = Math.pow(x*x + y*y, 0.5);
         const phi = Math.atan2(y, x);
 
