@@ -1,17 +1,21 @@
 import * as THREE from 'three';
 import { Vector3 } from 'three';
 
-const generateTrajectories = (r, phi, d_phi=0.05, n_rays=40) => {
+const BLACK = 0x000000;
+const PURPLE = 0xcf8bed;
+
+const generateTrajectories = (r, phi, d_phi=0.05, n_rays=80) => {
     const x_traj = [];
     const y_traj = [];
+    const half_ray = Math.trunc(n_rays / 2);
 
-    for (let i = 0; i < 2*n_rays; i++){
-        const fac = (i < n_rays) ? 1 : -1;
-        //const r = 4;
+    for (let i = 0; i < 2*half_ray; i++){
+        const fac = (i < half_ray) ? 1 : -1;
+
         let u = 1/r;
-    
         let phi_ = phi;
-        let u_dot = u * Math.tan(Math.PI*(0.3 + 0.2*i/(n_rays-1))); //d_u/d_phi
+
+        let u_dot = u * Math.tan(Math.PI*(0.1 + 0.4*i/(half_ray-1))); //d_u/d_phi
     
         const x = [Math.cos(phi_)/u];
         const y = [Math.sin(phi_)/u];
@@ -43,6 +47,8 @@ class SceneManager {
         this.height = window.innerHeight;
         this.aspect = this.width/this.height;
         this.scl = 20.0;
+        this.stepSize = 0.05;
+        this.n_rays = 80;
 
         this.setup();
         this.addMeshes();
@@ -61,7 +67,7 @@ class SceneManager {
 
     addMeshes() {
         const geometry = new THREE.CircleGeometry(1);
-        const blackMaterial = new THREE.MeshBasicMaterial({color: 0x000000});
+        const blackMaterial = new THREE.MeshBasicMaterial({color: BLACK});
 
         const mesh = new THREE.Mesh(geometry, blackMaterial);
         mesh.name = "event horizon";
@@ -70,10 +76,10 @@ class SceneManager {
 
         this.lineMeshes = [];
 
-        for (let i = 0; i < 80; i++) {
+        for (let i = 0; i < this.n_rays; i++) {
             const points = [new Vector3()];
             const lineGeometry = new THREE.BufferGeometry().setFromPoints(points);
-            const lineMaterial = new THREE.LineBasicMaterial({color: 0xcf8bed})
+            const lineMaterial = new THREE.LineBasicMaterial({color: PURPLE})
     
             let l = new THREE.Line(lineGeometry, lineMaterial);
             l.name = `trajectory_${i}`;
@@ -84,7 +90,7 @@ class SceneManager {
     }
 
     calculateTrajectoryGeometry(r, phi) {
-        const {x_traj, y_traj} = generateTrajectories(r, phi);
+        const {x_traj, y_traj} = generateTrajectories(r, phi, this.stepSize, this.n_rays);
 
         const trajectories = [];
         x_traj.forEach((_, i) => {
@@ -99,9 +105,9 @@ class SceneManager {
             const [lastPoint] = trajectories[i].slice(-1);
             
             if (lastPoint.length() < 1.5) {
-                this.lineMeshes[i].material.color.set(0x000000);
+                this.lineMeshes[i].material.color.set(BLACK);
             } else {
-                this.lineMeshes[i].material.color.set(0xcf8bed);
+                this.lineMeshes[i].material.color.set(PURPLE);
             }
         })
     }
