@@ -5,11 +5,14 @@ export const App = () => {
   const canvasRef = useRef();
   const programRef = useRef();
 
+  const [scale, setScale] = useState(20);
+  const [numRays, setNumRays] = useState(80);
+
   useEffect(() => {
     const canvas = canvasRef.current;
 
     if (canvas) {
-      programRef.current = new SceneManager(canvas);
+      programRef.current = new SceneManager(canvas, scale, numRays);
     }
   }, [])
 

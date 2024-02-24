@@ -14,16 +14,17 @@ const generateTrajectories = (r, phi, d_phi=0.05, n_rays=80) => {
 
         let u = 1/r;
         let phi_ = phi;
-
         let u_dot = u * Math.tan(Math.PI*(0.1 + 0.4*i/(half_ray-1))); //d_u/d_phi
     
         const x = [Math.cos(phi_)/u];
         const y = [Math.sin(phi_)/u];
     
         for (let i = 0; i < 1000; i++){
-            u_dot += (3*u**2 - u)*d_phi*fac;
-            u += u_dot*d_phi*fac;
-            phi_ += d_phi*fac;
+            const d_phi_scaled = d_phi/Math.max(u, 0.2);
+
+            u_dot += fac*(3*u**2 - u)*d_phi_scaled;
+            u += fac*u_dot*d_phi_scaled;
+            phi_ += fac*d_phi_scaled;
     
             if (u < 0.001 || u > 1){
                 break;
@@ -41,14 +42,14 @@ const generateTrajectories = (r, phi, d_phi=0.05, n_rays=80) => {
 }
 
 class SceneManager {
-    constructor(canvas) {
+    constructor(canvas, scale, numRays) {
         this.canvas = canvas;
         this.width = window.innerWidth;
         this.height = window.innerHeight;
         this.aspect = this.width/this.height;
-        this.scl = 20.0;
-        this.stepSize = 0.05;
-        this.n_rays = 80;
+        this.stepSize = 0.02;
+        this.scl = scale;
+        this.n_rays = numRays;
 
         this.setup();
         this.addMeshes();
