@@ -23,6 +23,7 @@ export const App = () => {
     setMouseY(ev.pageY);
   }
 
+  // render THREE.js scene
   useEffect(() => {
     const program = programRef.current;
 
