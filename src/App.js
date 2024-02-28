@@ -6,7 +6,7 @@ export const App = () => {
   const programRef = useRef();
 
   const [scale, setScale] = useState(20);
-  const [numRays, setNumRays] = useState(80);
+  const [numRays, setNumRays] = useState(96);
 
   useEffect(() => {
     const canvas = canvasRef.current;

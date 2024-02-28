@@ -4,39 +4,72 @@ import { Vector3 } from 'three';
 const BLACK = 0x000000;
 const PURPLE = 0xcf8bed;
 
-const generateTrajectories = (r, phi, d_phi=0.05, n_rays=80) => {
+const generateTrajectories2 = (r, phi, d_phi=0.05, n_rays=80) => {
     const x_traj = [];
     const y_traj = [];
     const half_ray = Math.trunc(n_rays / 2);
 
-    for (let i = 0; i < 2*half_ray; i++){
-        const fac = (i < half_ray) ? 1 : -1;
-
+    for (let i = - half_ray; i < half_ray; i++){
         let u = 1/r;
         let phi_ = phi;
-        let u_dot = u * Math.tan(Math.PI*(0.1 + 0.4*i/(half_ray-1))); //d_u/d_phi
+        let fac = 1;
+        const direction = 'everywhere'
+        let epsilon = 0;
+
+        // let epsilon = 0.2*Math.PI*i/half_ray;
+
+        // if (epsilon < 1) {
+        //     fac = -1;
+        // }
+
+        // let u_dot = u * Math.tan(epsilon); //d_u/d_phi
+
+        if (direction==='forward') {
+            epsilon = 0.3*Math.PI*i/half_ray;
+            //(epsilon < 0) ? fac = 1 : fac = -1;
+        }
+        else if (direction==='left') {
+            epsilon = Math.PI*(0.25 + 0.25*(i + half_ray)/half_ray);
+            (i < 0) ? fac = -1 : fac = 1;
+            epsilon = Math.PI - fac*epsilon;
+        }
+        else if (direction==='everywhere') {
+            epsilon = 1*Math.PI*i/(half_ray-1);
+            if (epsilon > 0)  {
+                epsilon = Math.PI - epsilon;
+                fac = -1;
+            }
+            //epsilon = Math.PI - fac*epsilon;
+        }
+        
+        let u_dot = u * Math.tan(epsilon); //d_u/d_phi
+
+        // let rayPhi = phi + Math.PI*( 1.0 + i/(half_ray*4.0));
+        // let u_dot = u * Math.tan(fac*rayPhi); //d_u/d_phi
     
         const x = [Math.cos(phi_)/u];
         const y = [Math.sin(phi_)/u];
     
-        for (let i = 0; i < 1000; i++){
+        for (let j = 0; j < 1000; j++){
             const d_phi_scaled = d_phi/Math.max(u, 0.2);
 
-            u_dot += fac*(3*u**2 - u)*d_phi_scaled;
-            u += fac*u_dot*d_phi_scaled;
+            u_dot += (3*u**2 - u)*d_phi_scaled;
+            u += u_dot*d_phi_scaled;
             phi_ += fac*d_phi_scaled;
     
             if (u < 0.001 || u > 1){
                 break;
             }
     
-            x.push(Math.cos(phi_)/u)
-            y.push(Math.sin(phi_)/u)
+            x.push(Math.cos(phi_)/u);
+            y.push(Math.sin(phi_)/u);
         }
     
-        x_traj.push(x)
-        y_traj.push(y)
+        x_traj.push(x);
+        y_traj.push(y);
     }
+
+    console.log(x_traj)
 
     return {x_traj, y_traj};
 }
@@ -91,7 +124,7 @@ class SceneManager {
     }
 
     calculateTrajectoryGeometry(r, phi) {
-        const {x_traj, y_traj} = generateTrajectories(r, phi, this.stepSize, this.n_rays);
+        const {x_traj, y_traj} = generateTrajectories2(r, phi, this.stepSize, this.n_rays);
 
         const trajectories = [];
         x_traj.forEach((_, i) => {
