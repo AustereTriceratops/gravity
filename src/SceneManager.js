@@ -4,16 +4,25 @@ import { Vector3 } from 'three';
 const BLACK = 0x000000;
 const PURPLE = 0xcf8bed;
 
+function floatMod(x, y) {
+    if (y === 0) return null;
+
+    const d = Math.floor(x/y);
+    const r = x - d*y;
+
+    return r;
+}
+
 const generateTrajectories2 = (r, phi, d_phi=0.05, n_rays=80) => {
     const x_traj = [];
     const y_traj = [];
     const half_ray = Math.trunc(n_rays / 2);
 
-    for (let i = - half_ray; i < half_ray; i++){
+    for (let i = -half_ray; i < half_ray; i++){
         let u = 1/r;
         let phi_ = phi;
         let fac = 1;
-        const direction = 'everywhere'
+        const direction = 'left'
         let epsilon = 0;
 
         // let epsilon = 0.2*Math.PI*i/half_ray;
@@ -29,29 +38,41 @@ const generateTrajectories2 = (r, phi, d_phi=0.05, n_rays=80) => {
             //(epsilon < 0) ? fac = 1 : fac = -1;
         }
         else if (direction==='left') {
-            epsilon = Math.PI*(0.25 + 0.25*(i + half_ray)/half_ray);
+            epsilon = Math.PI*(0.4 + 0.1*(i + half_ray)/half_ray);
             (i < 0) ? fac = -1 : fac = 1;
             epsilon = Math.PI - fac*epsilon;
         }
         else if (direction==='everywhere') {
-            epsilon = 1*Math.PI*i/(half_ray-1);
-            if (epsilon > 0)  {
-                epsilon = Math.PI - epsilon;
+            epsilon = Math.PI*i/half_ray;
+
+            if (i > 0)  {
+                epsilon *= -1;
                 fac = -1;
             }
-            //epsilon = Math.PI - fac*epsilon;
+        }
+        else if (direction==='any') {
+            const a = 10; // rotation factor
+            epsilon = 0.25*Math.PI*(i + half_ray + a)/half_ray;
+            // const quarter_epsilon = 0.25*Math.PI*(i + half_ray)/half_ray;
+            
+            // const half_epsilon = 0.5*Math.PI*i/half_ray;
+            // epsilon = floatMod(epsilon + half_epsilon, Math.PI*i/half_ray);
+            //epsilon = floatMod(epsilon, Math.PI*(i + half_ray + a)/half_ray);
+            //console.log(epsilon)
+
+            if (i > half_ray + a)  {
+                epsilon *= -1;
+                fac = -1;
+            }
         }
         
         let u_dot = u * Math.tan(epsilon); //d_u/d_phi
-
-        // let rayPhi = phi + Math.PI*( 1.0 + i/(half_ray*4.0));
-        // let u_dot = u * Math.tan(fac*rayPhi); //d_u/d_phi
     
         const x = [Math.cos(phi_)/u];
         const y = [Math.sin(phi_)/u];
     
         for (let j = 0; j < 1000; j++){
-            const d_phi_scaled = d_phi/Math.max(u, 0.2);
+            const d_phi_scaled = d_phi/Math.max(u, 0.1);
 
             u_dot += (3*u**2 - u)*d_phi_scaled;
             u += u_dot*d_phi_scaled;
@@ -68,8 +89,6 @@ const generateTrajectories2 = (r, phi, d_phi=0.05, n_rays=80) => {
         x_traj.push(x);
         y_traj.push(y);
     }
-
-    console.log(x_traj)
 
     return {x_traj, y_traj};
 }

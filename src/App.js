@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import SceneManager from "./SceneManager";
 
 export const App = () => {
@@ -6,7 +6,7 @@ export const App = () => {
   const programRef = useRef();
 
   const [scale, setScale] = useState(20);
-  const [numRays, setNumRays] = useState(96);
+  const [numRays, setNumRays] = useState(48);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -36,10 +36,15 @@ export const App = () => {
   }, [mouseX, mouseY])
 
   return (
-    <canvas
-      onMouseMove={mouseMove}
-      ref={canvasRef}
-    />
+    <React.Fragment>
+      <div>
+        <input type='range'/>
+      </div>
+      <canvas
+        onMouseMove={mouseMove}
+        ref={canvasRef}
+      />
+    </React.Fragment>
   );
 }
 
