@@ -1,97 +1,9 @@
 import * as THREE from 'three';
 import { Vector3 } from 'three';
+import { generateManyTrajectories } from './physics';
 
 const BLACK = 0x000000;
 const PURPLE = 0xcf8bed;
-
-function floatMod(x, y) {
-    if (y === 0) return null;
-
-    const d = Math.floor(x/y);
-    const r = x - d*y;
-
-    return r;
-}
-
-const generateTrajectories2 = (r, phi, d_phi=0.05, n_rays=80) => {
-    const x_traj = [];
-    const y_traj = [];
-    const half_ray = Math.trunc(n_rays / 2);
-
-    for (let i = -half_ray; i < half_ray; i++){
-        let u = 1/r;
-        let phi_ = phi;
-        let fac = 1;
-        const direction = 'left'
-        let epsilon = 0;
-
-        // let epsilon = 0.2*Math.PI*i/half_ray;
-
-        // if (epsilon < 1) {
-        //     fac = -1;
-        // }
-
-        // let u_dot = u * Math.tan(epsilon); //d_u/d_phi
-
-        if (direction==='forward') {
-            epsilon = 0.3*Math.PI*i/half_ray;
-            //(epsilon < 0) ? fac = 1 : fac = -1;
-        }
-        else if (direction==='left') {
-            epsilon = Math.PI*(0.4 + 0.1*(i + half_ray)/half_ray);
-            (i < 0) ? fac = -1 : fac = 1;
-            epsilon = Math.PI - fac*epsilon;
-        }
-        else if (direction==='everywhere') {
-            epsilon = Math.PI*i/half_ray;
-
-            if (i > 0)  {
-                epsilon *= -1;
-                fac = -1;
-            }
-        }
-        else if (direction==='any') {
-            const a = 10; // rotation factor
-            epsilon = 0.25*Math.PI*(i + half_ray + a)/half_ray;
-            // const quarter_epsilon = 0.25*Math.PI*(i + half_ray)/half_ray;
-            
-            // const half_epsilon = 0.5*Math.PI*i/half_ray;
-            // epsilon = floatMod(epsilon + half_epsilon, Math.PI*i/half_ray);
-            //epsilon = floatMod(epsilon, Math.PI*(i + half_ray + a)/half_ray);
-            //console.log(epsilon)
-
-            if (i > half_ray + a)  {
-                epsilon *= -1;
-                fac = -1;
-            }
-        }
-        
-        let u_dot = u * Math.tan(epsilon); //d_u/d_phi
-    
-        const x = [Math.cos(phi_)/u];
-        const y = [Math.sin(phi_)/u];
-    
-        for (let j = 0; j < 1000; j++){
-            const d_phi_scaled = d_phi/Math.max(u, 0.1);
-
-            u_dot += (3*u**2 - u)*d_phi_scaled;
-            u += u_dot*d_phi_scaled;
-            phi_ += fac*d_phi_scaled;
-    
-            if (u < 0.001 || u > 1){
-                break;
-            }
-    
-            x.push(Math.cos(phi_)/u);
-            y.push(Math.sin(phi_)/u);
-        }
-    
-        x_traj.push(x);
-        y_traj.push(y);
-    }
-
-    return {x_traj, y_traj};
-}
 
 class SceneManager {
     constructor(canvas, scale, numRays) {
@@ -142,8 +54,10 @@ class SceneManager {
         }
     }
 
-    calculateTrajectoryGeometry(r, phi) {
-        const {x_traj, y_traj} = generateTrajectories2(r, phi, this.stepSize, this.n_rays);
+    calculateTrajectoryGeometry(r, phi, s_1) {
+        const {x_traj, y_traj} = generateManyTrajectories(
+            r, phi, this.stepSize, this.n_rays, s_1, 0.2
+        );
 
         const trajectories = [];
         x_traj.forEach((_, i) => {
@@ -165,11 +79,11 @@ class SceneManager {
         })
     }
 
-    render(mouseX, mouseY) {
+    render(mouseX, mouseY, s_1) {
         const [x, y] = this.mouseCoordsToEuclidean(mouseX, mouseY);
         const [r, phi] = this.euclideanCoordsToPolar(x, y);
 
-        this.calculateTrajectoryGeometry(r, phi);
+        this.calculateTrajectoryGeometry(r, phi, s_1);
         
         this.renderer.render(this.scene, this.camera);
     }
