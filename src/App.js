@@ -1,8 +1,11 @@
 import { Input, Slider } from "@mui/material";
 import React, { useState, useEffect, useRef } from "react";
 import SceneManager from "./SceneManager";
+import SceneManagerGL from "./SceneManagerGL";
 
+// TODO: resizing window
 export const App = () => {
+    // TODO: take canvas + program refs out to their own components
     const canvasRef = useRef();
     const programRef = useRef();
 
@@ -14,7 +17,8 @@ export const App = () => {
         const canvas = canvasRef.current;
 
         if (canvas) {
-        programRef.current = new SceneManager(canvas, scale, numRays);
+            //programRef.current = new SceneManager(canvas, scale, numRays);
+            programRef.current = new SceneManagerGL(canvas);
         }
     }, [])
 
@@ -32,14 +36,23 @@ export const App = () => {
         setMouseY(ev.pageY);
     }
 
-    // render THREE.js scene
+    /// render webgl scene
     useEffect(() => {
         const program = programRef.current;
-
+        
         if (program) {
-            program.render(mouseX, mouseY, slider1);
+            program.render();
         }
-    }, [mouseX, mouseY, slider1])
+    }, [])
+    
+    // render THREE.js scene
+    // useEffect(() => {
+    //     const program = programRef.current;
+
+    //     if (program) {
+    //         program.render(mouseX, mouseY, slider1);
+    //     }
+    // }, [mouseX, mouseY, slider1])
 
     return (
         <React.Fragment>
@@ -77,6 +90,10 @@ export const App = () => {
         <canvas
             onMouseMove={mouseMove}
             ref={canvasRef}
+            style={{
+                width: '100vw',
+                height: '100vh'
+            }}
         />
         </React.Fragment>
     );
