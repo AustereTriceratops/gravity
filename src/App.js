@@ -28,8 +28,8 @@ export const App = () => {
     const [mouseY, setMouseY] = useState(100);
 
     const mouseMove = (ev) => {
-        //setMouseX(ev.pageX);
-        //setMouseY(ev.pageY);
+        setMouseX(ev.pageX);
+        setMouseY(ev.pageY);
     }
 
     // render THREE.js scene
