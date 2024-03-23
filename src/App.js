@@ -90,9 +90,11 @@ export const App = () => {
         <canvas
             onMouseMove={mouseMove}
             ref={canvasRef}
+            width={window.innerWidth}
+            height={window.innerHeight}
             style={{
-                width: '100vw',
-                height: '100vh'
+                width: '100%',
+                height: '100%'
             }}
         />
         </React.Fragment>

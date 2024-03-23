@@ -1,15 +1,21 @@
-const vertexShader = `
-    attribute vec4 aVertexPosition;
+import {testShader} from "./shader.js"
 
-    void main() {
-        gl_Position = aVertexPosition;
-    }
+const vertexShader = `
+attribute vec4 aVertexPosition;
+
+void main() {
+    gl_Position = aVertexPosition;
+}
 `
 
 const fragmentShader = `
-    void main() {
-        gl_FragColor = vec4(0.3, 0.2, 0.2, 1.0);
-    }
+precision mediump float;
+uniform vec2 resolution;
+
+void main() {
+    vec2 uv = gl_FragCoord.xy/resolution;
+    gl_FragColor = vec4(uv.x, uv.y, 1.0, 1.0);
+}
 `
 
 class SceneManagerGL {
@@ -21,14 +27,17 @@ class SceneManagerGL {
         const gl = canvas.getContext('webgl');
         gl.clearColor(0.2, 0.2, 0.2, 1.0);
 
-        this.shaderProgram = initProgram(gl, vertexShader, fragmentShader);
+        this.shaderProgram = initProgram(gl, vertexShader, testShader);
         gl.useProgram(this.shaderProgram);
 
         this.shaderAttribs = {
-            vertexPosition: gl.getAttribLocation(this.shaderProgram, 'aVertexPosition')
+            vertexPosition: gl.getAttribLocation(this.shaderProgram, 'aVertexPosition'),
+            resolution: gl.getUniformLocation(this.shaderProgram, 'resolution')
         };
 
         this.positionBuffer = initPositionBuffer(gl, this.shaderAttribs.vertexPosition);
+
+        gl.uniform2fv(this.shaderAttribs.resolution, [this.width, this.height]);
 
         this.gl = gl;
     }
