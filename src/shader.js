@@ -2,8 +2,9 @@ export const testShader = `
 precision mediump float;
 
 uniform vec2 resolution;
+uniform float cameraDistance;
 
-vec3 cameraPos = vec3(500.0, 0.0, 0.0);
+vec3 cameraPos = vec3(cameraDistance, 0.0, 0.0);
 vec3 cameraRight = vec3(0.0, 1.0, 0.0);
 vec3 cameraForward = vec3(-1.0, 0.0, 0.0);
 vec3 cameraUp = vec3(0.0, 0.0, 1.0);
@@ -13,15 +14,13 @@ float pi = 3.14159;
 vec3 planeNormal = vec3(1.0, 0.0, 0.0);
 float planeDistance = -100.0;
 
-float sdPlane( vec3 rayPos, vec3 normal, float h )
-{
-return dot(rayPos, normal) + h;
+float sdPlane( vec3 rayPos, vec3 normal, float h ) {
+    return dot(rayPos, normal) + h;
 }
 
 // COORDINATES
 
-float atan2(in float y, in float x)
-{
+float atan2(in float y, in float x) {
     float s = abs(x) - abs(y);
     return mix(pi/2.0 - atan(x, y), atan(y, x), s);
 }
@@ -67,25 +66,16 @@ vec3 raymarch(vec3 rayPos, vec3 rayDir) {
         }
         
         // convert back to euclidean 
-        
         float x = sin(phi)/u;
         float y = cos(phi)/u;
         
-        if (x < -50.0) {
+        if (x < -200.0) {
             if (mod(abs(y), 60.0) < 30.0) {
                 return vec3(0.3, 0.3, 0.3);
             } else {
                 return vec3(0.8, 0.8, 0.8);
             }
         }
-        
-        //if (pos.x < planeDistance + 0.01) {
-        //    if (mod(pos.y, 10.0) < 5.0) {
-        //        return vec3(0.3, 0.3, 0.3);
-        //    } else {
-        //        return vec3(0.8, 0.8, 0.8);
-        //    }
-        //}
     }
     
     return vec3(0.4, 0.0, 0.0);

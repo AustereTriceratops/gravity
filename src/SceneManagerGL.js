@@ -32,7 +32,8 @@ class SceneManagerGL {
 
         this.shaderAttribs = {
             vertexPosition: gl.getAttribLocation(this.shaderProgram, 'aVertexPosition'),
-            resolution: gl.getUniformLocation(this.shaderProgram, 'resolution')
+            resolution: gl.getUniformLocation(this.shaderProgram, 'resolution'),
+            cameraDistance: gl.getUniformLocation(this.shaderProgram, 'cameraDistance')
         };
 
         this.positionBuffer = initPositionBuffer(gl, this.shaderAttribs.vertexPosition);
@@ -42,7 +43,8 @@ class SceneManagerGL {
         this.gl = gl;
     }
 
-    render() {
+    render(cameraDistance) {
+        this.gl.uniform1f(this.shaderAttribs.cameraDistance, cameraDistance);
         this.gl.clear(this.gl.COLOR_BUFFER_BIT);
 
         this.gl.drawArrays(this.gl.TRIANGLES, 0, 6);

@@ -1,7 +1,36 @@
-import { Input, Slider } from "@mui/material";
+import { Input, Slider, Stack } from "@mui/material";
 import React, { useState, useEffect, useRef } from "react";
 import SceneManager from "./SceneManager";
 import SceneManagerGL from "./SceneManagerGL";
+
+const InputSlider = (props) => {
+    const {value, setValue, step, min, max} = props;
+
+    return (
+        <Stack direction='row'>
+            <Slider 
+                value={value}
+                step={step}
+                min={min}
+                max={max}
+                
+                onChange={(ev) => setValue(ev.target.value)}
+            />
+            <Input
+                value={value}
+                type='numeric'
+                step={step}
+                min={min}
+                max={max}
+
+                onChange={(ev) => setValue(ev.target.value)}
+                sx={{
+                    color: 'white'
+                }}
+            />
+        </Stack>
+    )
+}
 
 // TODO: resizing window
 export const App = () => {
@@ -25,6 +54,7 @@ export const App = () => {
     // UI STATE
 
     const [slider1, setSlider1] = useState(0.0);
+    const [cameraDistance, setCameraDistance] = useState(100);
 
     // MOUSE MOVEMENT
 
@@ -41,9 +71,9 @@ export const App = () => {
         const program = programRef.current;
         
         if (program) {
-            program.render();
+            program.render(cameraDistance);
         }
-    }, [])
+    }, [cameraDistance])
     
     // render THREE.js scene
     // useEffect(() => {
@@ -58,33 +88,28 @@ export const App = () => {
         <React.Fragment>
         <div
             style={{
-            position: 'absolute',
-            display: 'flex',
-            gap: '0.5rem',
-            backgroundColor: '#000000',
-            opacity: '40%',
-            padding: '0.5rem'
+                position: 'absolute',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '0.5rem',
+                backgroundColor: '#444444',
+                opacity: '75%',
+                padding: '0.5rem',
             }}
         >
-            <Slider 
+            <InputSlider
                 value={slider1}
-                step={0.01}
-                min={0}
-                max={1}
-                
-                onChange={(ev) => setSlider1(ev.target.value)}
-            />
-            <Input
-                value={slider1}
-                type='numeric'
+                setValue={setSlider1}
                 step={0.01}
                 min={0}
                 max={2*Math.PI}
-
-                onChange={(ev) => setSlider1(ev.target.value)}
-                sx={{
-                    color: 'white'
-                }}
+            />
+            <InputSlider
+                value={cameraDistance}
+                setValue={setCameraDistance}
+                step={0.01}
+                min={1}
+                max={200}
             />
         </div>
         <canvas
