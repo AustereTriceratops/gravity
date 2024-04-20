@@ -109,7 +109,7 @@ export const App = () => {
                 setValue={setCameraDistance}
                 step={0.01}
                 min={1}
-                max={200}
+                max={500}
             />
         </div>
         <canvas
