@@ -1,4 +1,4 @@
-import {testShader} from "./shader.js"
+import {testShader, TerrellRotationShader} from "./shader.js"
 
 const vertexShader = `
 attribute vec4 aVertexPosition;
@@ -13,8 +13,14 @@ precision mediump float;
 uniform vec2 resolution;
 
 void main() {
+    // BOTTOM LEFT IS (0, 0)
+    // TOP RIGHT IS (1, 1)
     vec2 uv = gl_FragCoord.xy/resolution;
-    gl_FragColor = vec4(uv.x, uv.y, 1.0, 1.0);
+
+    float val = 0.5*(uv.x + uv.y);
+    gl_FragColor = vec4(val, val, val, 1.0);
+    // gl_FragColor = vec4(uv.x, uv.y, 1.0, 1.0);
+    
 }
 `
 
@@ -27,7 +33,7 @@ class SceneManagerGL {
         const gl = canvas.getContext('webgl');
         gl.clearColor(0.2, 0.2, 0.2, 1.0);
 
-        this.shaderProgram = initProgram(gl, vertexShader, testShader);
+        this.shaderProgram = initProgram(gl, vertexShader, TerrellRotationShader);
         gl.useProgram(this.shaderProgram);
 
         this.shaderAttribs = {

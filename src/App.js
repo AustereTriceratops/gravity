@@ -38,8 +38,8 @@ export const App = () => {
     const canvasRef = useRef();
     const programRef = useRef();
 
-    const [scale, setScale] = useState(20);
-    const [numRays, setNumRays] = useState(48);
+    // const [scale, setScale] = useState(20);
+    // const [numRays, setNumRays] = useState(48);
 
     // set canvas ref
     useEffect(() => {
@@ -67,13 +67,14 @@ export const App = () => {
     }
 
     /// render webgl scene
+    // TODO: add time dependence
     useEffect(() => {
         const program = programRef.current;
         
         if (program) {
-            program.render(cameraDistance);
+            program.render();
         }
-    }, [cameraDistance])
+    }, [])
     
     // render THREE.js scene
     // useEffect(() => {

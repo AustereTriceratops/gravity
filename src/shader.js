@@ -74,7 +74,7 @@ vec3 raymarch(vec3 rayPos, vec3 rayDir) {
         float y = cos(rayAngleRadial)*cos(phi)/u;
         float z = sin(rayAngleRadial)/u;
         
-        if (x < -200.0) {
+        if (x < -1000.0) {
             float ymod = mod(abs(y), 100.0);
             float zmod = mod(abs(z), 100.0);
             if (ymod < 50.0 ^^ zmod < 50.0) {
@@ -85,7 +85,7 @@ vec3 raymarch(vec3 rayPos, vec3 rayDir) {
         }
     }
     
-    return vec3(0.4, 0.0, 0.0);
+    return vec3(0.8, 0.0, 0.0);
 }
 
 void main() {
@@ -99,4 +99,86 @@ void main() {
     // Output to screen
     gl_FragColor = vec4(color, 1.0);
 }
-`;
+`
+
+/// TODO: start using quaternions
+export const TerrellRotationShader = `
+precision mediump float;
+
+uniform vec2 resolution;
+
+vec3 lightDir = normalize(vec3(1.0, 0.4, -0.8));
+float phi = 0.8;
+float theta = 0.3;
+float distance = 12.0;
+float fov = 65.0;
+
+// === VECTOR ALGEBRA ===
+vec3 crossProduct(vec3 a, vec3 b) {
+    return vec3(a.y*b.z - a.z*b.y, a.z*b.x - a.x*b.z, a.x*b.y - a.y*b.x);
+}
+
+// === SDFs ===
+
+float boxSDF(vec3 pos) {
+    return max(max(pos.x, pos.y), pos.z);
+}
+
+vec3 boxNormal(vec3 pos) {
+    float ref = boxSDF(pos);
+    float dx = boxSDF(pos + vec3(0.001, 0.0, 0.0)) - ref;
+    float dy = boxSDF(pos + vec3(0.0, 0.001, 0.0)) - ref;
+    float dz = boxSDF(pos + vec3(0.0, 0.0, 0.001)) - ref;
+    return normalize(vec3(dx, dy, dz));
+}
+
+// === RAYMARCHING ===
+
+/// TODO: directional lighting
+vec3 raymarch(vec3 rayPos, vec3 rayDir) {
+    float boxSize = 1.0;
+
+    for (int i = 0; i < 100; i++) {
+        vec3 sdfPos = abs(rayPos) - boxSize;
+        float sdf = boxSDF(sdfPos);
+        
+        vec3 dPos = rayDir * sdf;
+        
+        if (length(dPos) < 0.001) {
+            // LIGHTING
+            vec3 normal = boxNormal(sdfPos);
+            float d = dot(normal, lightDir);
+
+            float light = 0.6*(1.0 + d)*(1.0 + d) + 0.4;
+            vec3 lightExponent = vec3(light*0.8, light, light);
+            lightExponent += 2.0*float(i)/100.0; // fast AO
+
+            return pow(vec3(0.5, 0.8, 0.6), lightExponent);
+        }
+
+        rayPos += dPos;
+    }
+
+    return vec3(1.0, 1.0, 0.9);
+}
+
+void main() {
+    // normalized pixel coordinates to [-1, 1]
+    vec2 aspect = vec2(resolution.y/resolution.x, 1.0);
+    vec2 uv = aspect*2.0*gl_FragCoord.xy/resolution - aspect;
+
+    /// TODO: QUATERNIONS
+    vec3 cameraForward = vec3(cos(phi)*cos(theta), -sin(phi)*cos(theta), sin(theta));
+    vec3 cameraRight = vec3(sin(phi), cos(phi), 0.0);
+    vec3 cameraUp = crossProduct(cameraRight, cameraForward);
+
+    vec3 cameraPos = -distance * cameraForward;
+    
+    vec3 rayDir = normalize(0.5*uv.x * cameraRight + 0.25*uv.y * cameraUp + cameraForward);
+    
+    vec3 color = raymarch(cameraPos, rayDir);
+
+    // Output to screen
+    gl_FragColor = vec4(color, 1.0);
+}
+`

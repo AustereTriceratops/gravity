@@ -32,7 +32,7 @@ export const generateSingleTrajectory = (r, phi, d_phi=0.05, s_1=0) => {
         u += u_dot*d_phi_scaled;
         phi_ += fac*d_phi_scaled;
 
-        if (u < 0.001 || u > 1){
+        if (u < 0.0001 || u > 1){
             break;
         }
 
