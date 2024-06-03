@@ -120,15 +120,16 @@ vec3 crossProduct(vec3 a, vec3 b) {
 
 // === SDFs ===
 
-float boxSDF(vec3 pos) {
+float boxSDF(vec3 boxPos, vec3 rayPos) {
+    vec3 pos = abs(rayPos - boxPos) - 1.0;
     return max(max(pos.x, pos.y), pos.z);
 }
 
-vec3 boxNormal(vec3 pos) {
-    float ref = boxSDF(pos);
-    float dx = boxSDF(pos + vec3(0.001, 0.0, 0.0)) - ref;
-    float dy = boxSDF(pos + vec3(0.0, 0.001, 0.0)) - ref;
-    float dz = boxSDF(pos + vec3(0.0, 0.0, 0.001)) - ref;
+vec3 boxNormal(vec3 boxPos, vec3 rayPos) {
+    float ref = boxSDF(boxPos, rayPos);
+    float dx = boxSDF(boxPos, rayPos + vec3(0.001, 0.0, 0.0)) - ref;
+    float dy = boxSDF(boxPos, rayPos + vec3(0.0, 0.001, 0.0)) - ref;
+    float dz = boxSDF(boxPos, rayPos + vec3(0.0, 0.0, 0.001)) - ref;
     return normalize(vec3(dx, dy, dz));
 }
 
@@ -137,16 +138,17 @@ vec3 boxNormal(vec3 pos) {
 /// TODO: directional lighting
 vec3 raymarch(vec3 rayPos, vec3 rayDir) {
     float boxSize = 1.0;
+    vec3 boxPos = vec3(0.0, 0.0, 0.0);
 
     for (int i = 0; i < 100; i++) {
-        vec3 sdfPos = abs(rayPos) - boxSize;
-        float sdf = boxSDF(sdfPos);
+        //vec3 sdfPos = abs(rayPos) - boxSize;
+        float sdf = boxSDF(boxPos, rayPos);
         
         vec3 dPos = rayDir * sdf;
         
         if (length(dPos) < 0.001) {
             // LIGHTING
-            vec3 normal = boxNormal(sdfPos);
+            vec3 normal = boxNormal(boxPos, rayPos);
             float d = dot(normal, lightDir);
 
             float light = 0.6*(1.0 + d)*(1.0 + d) + 0.4;
@@ -164,7 +166,7 @@ vec3 raymarch(vec3 rayPos, vec3 rayDir) {
 
 void main() {
     // normalized pixel coordinates to [-1, 1]
-    vec2 aspect = vec2(resolution.y/resolution.x, 1.0);
+    vec2 aspect = vec2(resolution.x/resolution.y, 1.0);
     vec2 uv = aspect*2.0*gl_FragCoord.xy/resolution - aspect;
 
     /// TODO: QUATERNIONS
@@ -174,7 +176,7 @@ void main() {
 
     vec3 cameraPos = -distance * cameraForward;
     
-    vec3 rayDir = normalize(0.5*uv.x * cameraRight + 0.25*uv.y * cameraUp + cameraForward);
+    vec3 rayDir = normalize(0.4*uv.x * cameraRight + 0.4*uv.y * cameraUp + cameraForward);
     
     vec3 color = raymarch(cameraPos, rayDir);
 
