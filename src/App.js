@@ -185,6 +185,9 @@ const TerrellRotationScene = () => {
     const canvasRef = useRef();
     const programRef = useRef();
 
+    const xSens = 0.01;
+    const ySens = 0.008;
+
     // set canvas ref
     useEffect(() => {
         const canvas = canvasRef.current;
@@ -202,12 +205,31 @@ const TerrellRotationScene = () => {
 
     // MOUSE MOVEMENT
 
-    const [mouseX, setMouseX] = useState(100);
-    const [mouseY, setMouseY] = useState(100);
+    const [phi, setPhi] = useState(0.0);
+    const [theta, setTheta] = useState(0.0);
+    const [phiCurr, setPhiCurr] = useState(null);
+    const [thetaCurr, setThetaCurr] = useState(null);
 
-    const mouseMove = (ev) => {
-        setMouseX(ev.pageX);
-        setMouseY(ev.pageY);
+    const onMouseMove = (ev) => {
+        // TODO: use .offset_?
+        if (origin) {
+            setPhiCurr(phi - xSens*(ev.pageX - origin.x));
+
+            const theta_ = Math.max(Math.min(1.2, theta + ySens*(ev.pageY - origin.y)), -1.2);
+            setThetaCurr(theta_);
+        }
+    }
+
+    const [origin, setOrigin] = useState(null);
+
+    const onMouseDown = (ev) => {
+        setOrigin({x: ev.pageX, y: ev.pageY});
+    }
+
+    const onMouseUp = (ev) => {
+        setOrigin(null);
+        setPhi(phiCurr);
+        setTheta(thetaCurr);
     }
 
     /// render webgl scene
@@ -216,9 +238,9 @@ const TerrellRotationScene = () => {
         const program = programRef.current;
         
         if (program) {
-            program.render(velocity);
+            program.render(velocity, phiCurr, thetaCurr);
         }
-    }, [velocity])
+    }, [velocity, phiCurr, thetaCurr])
 
     return (
         <React.Fragment>
@@ -249,7 +271,9 @@ const TerrellRotationScene = () => {
             />
         </div>
         <canvas
-            onMouseMove={mouseMove}
+            onMouseMove={onMouseMove}
+            onMouseDown={onMouseDown}
+            onMouseUp={onMouseUp}
             ref={canvasRef}
             width={window.innerWidth}
             height={window.innerHeight}

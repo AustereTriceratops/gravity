@@ -107,10 +107,10 @@ precision mediump float;
 
 uniform vec2 resolution;
 uniform float velocity;
+uniform float phi;
+uniform float theta;
 
-vec3 lightDir = normalize(vec3(1.0, 0.4, -0.8));
-float phi = 1.57;
-float theta = 0.3;
+vec3 lightDir = normalize(vec3(1.0, 0.4, 0.8));
 float distance = 12.0;
 float fov = 65.0;
 

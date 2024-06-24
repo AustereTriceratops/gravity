@@ -73,19 +73,25 @@ export class TerrellSceneManager {
         this.shaderAttribs = {
             vertexPosition: gl.getAttribLocation(this.shaderProgram, 'aVertexPosition'),
             resolution: gl.getUniformLocation(this.shaderProgram, 'resolution'),
-            velocity: gl.getUniformLocation(this.shaderProgram, 'velocity')
+            velocity: gl.getUniformLocation(this.shaderProgram, 'velocity'),
+            phi: gl.getUniformLocation(this.shaderProgram, 'phi'),
+            theta: gl.getUniformLocation(this.shaderProgram, 'theta')
         };
-
-        this.positionBuffer = initPositionBuffer(gl, this.shaderAttribs.vertexPosition);
-
+        
         gl.uniform2fv(this.shaderAttribs.resolution, [this.width, this.height]);
         gl.uniform1f(this.shaderAttribs.velocity, 0);
+        gl.uniform1f(this.shaderAttribs.phi, 0);
+        gl.uniform1f(this.shaderAttribs.theta, 0);
+
+        this.positionBuffer = initPositionBuffer(gl, this.shaderAttribs.vertexPosition);
 
         this.gl = gl;
     }
 
-    render(velocity) {
+    render(velocity, phi, theta) {
         this.gl.uniform1f(this.shaderAttribs.velocity, velocity);
+        this.gl.uniform1f(this.shaderAttribs.phi, phi);
+        this.gl.uniform1f(this.shaderAttribs.theta, theta);
         this.gl.clear(this.gl.COLOR_BUFFER_BIT);
 
         this.gl.drawArrays(this.gl.TRIANGLES, 0, 6);
