@@ -205,10 +205,10 @@ const TerrellRotationScene = () => {
 
     // MOUSE MOVEMENT
 
-    const [phi, setPhi] = useState(0.0);
-    const [theta, setTheta] = useState(0.0);
-    const [phiCurr, setPhiCurr] = useState(null);
-    const [thetaCurr, setThetaCurr] = useState(null);
+    const [phi, setPhi] = useState(1);
+    const [theta, setTheta] = useState(0.3);
+    const [phiCurr, setPhiCurr] = useState(phi);
+    const [thetaCurr, setThetaCurr] = useState(theta);
 
     const onMouseMove = (ev) => {
         // TODO: use .offset_?
