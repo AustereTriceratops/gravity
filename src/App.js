@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import SceneManager from "./SceneManager";
-import SceneManagerGL from "./SceneManagerGL";
+import { TestSceneManager, TerrellSceneManager } from "./SceneManagerGL.js";
 import { TerrellRotationShader } from "./shader";
 import {InputSlider} from "./components";
 
@@ -26,7 +26,7 @@ const TestScene = () => {
 
         if (canvas) {
             //programRef.current = new SceneManager(canvas, scale, numRays);
-            programRef.current = new SceneManagerGL(canvas);
+            programRef.current = new TestSceneManager(canvas);
         }
     }, [])
 
@@ -191,13 +191,13 @@ const TerrellRotationScene = () => {
 
         if (canvas) {
             //programRef.current = new SceneManager(canvas, scale, numRays);
-            programRef.current = new SceneManagerGL(canvas);
+            programRef.current = new TerrellSceneManager(canvas);
         }
     }, [])
 
     // UI STATE
 
-    const [slider1, setSlider1] = useState(0.0);
+    const [velocity, setVelocity] = useState(0.0);
     const [cameraDistance, setCameraDistance] = useState(100);
 
     // MOUSE MOVEMENT
@@ -216,9 +216,9 @@ const TerrellRotationScene = () => {
         const program = programRef.current;
         
         if (program) {
-            program.render();
+            program.render(velocity);
         }
-    }, [])
+    }, [velocity])
 
     return (
         <React.Fragment>
@@ -234,11 +234,11 @@ const TerrellRotationScene = () => {
             }}
         >
             <InputSlider
-                value={slider1}
-                setValue={setSlider1}
-                step={0.01}
+                value={velocity}
+                setValue={setVelocity}
+                step={0.001}
                 min={0}
-                max={2*Math.PI}
+                max={0.99}
             />
             <InputSlider
                 value={cameraDistance}

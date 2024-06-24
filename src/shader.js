@@ -106,9 +106,10 @@ export const TerrellRotationShader = `
 precision mediump float;
 
 uniform vec2 resolution;
+uniform float velocity;
 
 vec3 lightDir = normalize(vec3(1.0, 0.4, -0.8));
-float phi = 0.8;
+float phi = 1.57;
 float theta = 0.3;
 float distance = 12.0;
 float fov = 65.0;
@@ -120,35 +121,41 @@ vec3 crossProduct(vec3 a, vec3 b) {
 
 // === SDFs ===
 
-float boxSDF(vec3 boxPos, vec3 rayPos) {
-    vec3 pos = abs(rayPos - boxPos) - 1.0;
+float boxSDF(vec3 boxPos, vec3 rayPos, vec3 boxDims) {
+    vec3 pos = abs(rayPos - boxPos) - boxDims;
     return max(max(pos.x, pos.y), pos.z);
 }
 
-vec3 boxNormal(vec3 boxPos, vec3 rayPos) {
-    float ref = boxSDF(boxPos, rayPos);
-    float dx = boxSDF(boxPos, rayPos + vec3(0.001, 0.0, 0.0)) - ref;
-    float dy = boxSDF(boxPos, rayPos + vec3(0.0, 0.001, 0.0)) - ref;
-    float dz = boxSDF(boxPos, rayPos + vec3(0.0, 0.0, 0.001)) - ref;
+vec3 boxNormal(vec3 boxPos, vec3 rayPos, vec3 boxDims) {
+    float ref = boxSDF(boxPos, rayPos, boxDims);
+    float dx = boxSDF(boxPos, rayPos + vec3(0.001, 0.0, 0.0), boxDims) - ref;
+    float dy = boxSDF(boxPos, rayPos + vec3(0.0, 0.001, 0.0), boxDims) - ref;
+    float dz = boxSDF(boxPos, rayPos + vec3(0.0, 0.0, 0.001), boxDims) - ref;
     return normalize(vec3(dx, dy, dz));
 }
 
 // === RAYMARCHING ===
 
 /// TODO: directional lighting
+// rayDir is normalized
 vec3 raymarch(vec3 rayPos, vec3 rayDir) {
-    float boxSize = 1.0;
-    vec3 boxPos = vec3(0.0, 0.0, 0.0);
+    vec3 boxPos = vec3(12.0*velocity, 0.0, 0.0);
+    vec3 boxVelocity = vec3(velocity, 0.0, 0.0);
+    float gamma = pow(1.0 - dot(boxVelocity, boxVelocity), 0.5);
+    vec3 gammaFac = normalize(boxVelocity)*gamma;
+    vec3 boxDims = vec3(gamma*1.0, 1.0, 1.0);
+    float len = 0.0;
 
-    for (int i = 0; i < 100; i++) {
-        //vec3 sdfPos = abs(rayPos) - boxSize;
-        float sdf = boxSDF(boxPos, rayPos);
+    for (int i = 0; i < 500; i++) {
+        vec3 displacement = len * boxVelocity;
+        float sdf = 0.25 * boxSDF(boxPos - displacement, rayPos, boxDims);
         
+        len += abs(sdf);
         vec3 dPos = rayDir * sdf;
         
         if (length(dPos) < 0.001) {
             // LIGHTING
-            vec3 normal = boxNormal(boxPos, rayPos);
+            vec3 normal = boxNormal(boxPos - displacement, rayPos, boxDims);
             float d = dot(normal, lightDir);
 
             float light = 0.6*(1.0 + d)*(1.0 + d) + 0.4;

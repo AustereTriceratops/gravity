@@ -1,4 +1,5 @@
-import {testShader, TerrellRotationShader} from "./shader.js"
+import {testShader, TerrellRotationShader} from "./shader.js";
+import {initProgram, initPositionBuffer} from "./glUtils.js"
 
 const vertexShader = `
 attribute vec4 aVertexPosition;
@@ -24,7 +25,7 @@ void main() {
 }
 `
 
-class SceneManagerGL {
+export class TestSceneManager {
     constructor(canvas) {
         this.canvas = canvas;
         this.width = canvas.width;
@@ -33,7 +34,7 @@ class SceneManagerGL {
         const gl = canvas.getContext('webgl');
         gl.clearColor(0.2, 0.2, 0.2, 1.0);
 
-        this.shaderProgram = initProgram(gl, vertexShader, TerrellRotationShader);
+        this.shaderProgram = initProgram(gl, vertexShader, testShader);
         gl.useProgram(this.shaderProgram);
 
         this.shaderAttribs = {
@@ -57,57 +58,36 @@ class SceneManagerGL {
     }
 }
 
-function initShader(gl, type, source) {
-    const shader = gl.createShader(type);
-    gl.shaderSource(shader, source);
-    gl.compileShader(shader);
+export class TerrellSceneManager {
+    constructor(canvas) {
+        this.canvas = canvas;
+        this.width = canvas.width;
+        this.height = canvas.height;
 
-    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) throw Error(
-        `An error occurred compiling the shaders: ${gl.getShaderInfoLog(shader)}`,
-    );
+        const gl = canvas.getContext('webgl');
+        gl.clearColor(0.2, 0.2, 0.2, 1.0);
 
-    return shader;
+        this.shaderProgram = initProgram(gl, vertexShader, TerrellRotationShader);
+        gl.useProgram(this.shaderProgram);
+
+        this.shaderAttribs = {
+            vertexPosition: gl.getAttribLocation(this.shaderProgram, 'aVertexPosition'),
+            resolution: gl.getUniformLocation(this.shaderProgram, 'resolution'),
+            velocity: gl.getUniformLocation(this.shaderProgram, 'velocity')
+        };
+
+        this.positionBuffer = initPositionBuffer(gl, this.shaderAttribs.vertexPosition);
+
+        gl.uniform2fv(this.shaderAttribs.resolution, [this.width, this.height]);
+        gl.uniform1f(this.shaderAttribs.velocity, 0);
+
+        this.gl = gl;
+    }
+
+    render(velocity) {
+        this.gl.uniform1f(this.shaderAttribs.velocity, velocity);
+        this.gl.clear(this.gl.COLOR_BUFFER_BIT);
+
+        this.gl.drawArrays(this.gl.TRIANGLES, 0, 6);
+    }
 }
-
-function initProgram(gl, vertexSource, fragmentSource) {
-    const shaderProgram = gl.createProgram();
-
-    const vShader = initShader(gl, gl.VERTEX_SHADER, vertexSource);
-    gl.attachShader(shaderProgram, vShader);
-    const fShader = initShader(gl, gl.FRAGMENT_SHADER, fragmentSource);
-    gl.attachShader(shaderProgram, fShader);
-
-    gl.linkProgram(shaderProgram);
-
-    if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) throw Error(
-        `Unable to initialize the shader program: ${gl.getProgramInfoLog(shaderProgram)}`
-    );
-
-    return shaderProgram;
-}
-
-function initPositionBuffer(gl, positionAttrib) {
-    const positions = new Float32Array([
-        -1.0, -1.0,
-        1.0, -1.0,
-        -1.0, 1.0,
-        -1.0, 1.0,
-        1.0, -1.0,
-        1.0, 1.0
-    ]);
-
-    return initArrayBuffer(gl, positions, positionAttrib, 2);
-}
-
-function initArrayBuffer(gl, array, attribute, dim) {
-    const buffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-    gl.bufferData(gl.ARRAY_BUFFER, array, gl.STATIC_DRAW);
-
-    gl.enableVertexAttribArray(attribute);
-    gl.vertexAttribPointer(attribute, dim, gl.FLOAT, true, 0, 0);
-
-    return buffer;
-}
-
-export default SceneManagerGL;
