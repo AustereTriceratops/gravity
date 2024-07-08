@@ -102,6 +102,12 @@ void main() {
 `
 
 /// TODO: start using quaternions
+
+/// 4-velocity: vec4, always normalized to 1 (or c)
+
+/// Lorentz transformations (i hope), 0 <= v < 1
+/// dT = (dt + v*dx)/sqrt(1 - v^2) 
+/// dX = sqrt(1 - v^2) * (dt + dx/v)
 export const TerrellRotationShader = `
 precision mediump float;
 
@@ -119,18 +125,27 @@ vec3 crossProduct(vec3 a, vec3 b) {
     return vec3(a.y*b.z - a.z*b.y, a.z*b.x - a.x*b.z, a.x*b.y - a.y*b.x);
 }
 
+float minkowskiProduct(vec4 a, vec4 b) {
+    return a.w*b.w - dot(a.xyz, b.xyz);
+}
+
+vec4 minkowskiNormalize(vec4 a) {
+    float x = pow(minkowskiProduct(a, a), 0.5);
+    return a/x;
+}
+
 // === SDFs ===
 
-float boxSDF(vec3 boxPos, vec3 rayPos, vec3 boxDims) {
-    vec3 pos = abs(rayPos - boxPos) - boxDims;
+float boxSDF(vec4 boxPos, vec4 rayPos, vec3 boxDims) {
+    vec3 pos = abs(rayPos.xyz - boxPos.xyz) - boxDims;
     return max(max(pos.x, pos.y), pos.z);
 }
 
-vec3 boxNormal(vec3 boxPos, vec3 rayPos, vec3 boxDims) {
+vec3 boxNormal(vec4 boxPos, vec4 rayPos, vec3 boxDims) {
     float ref = boxSDF(boxPos, rayPos, boxDims);
-    float dx = boxSDF(boxPos, rayPos + vec3(0.001, 0.0, 0.0), boxDims) - ref;
-    float dy = boxSDF(boxPos, rayPos + vec3(0.0, 0.001, 0.0), boxDims) - ref;
-    float dz = boxSDF(boxPos, rayPos + vec3(0.0, 0.0, 0.001), boxDims) - ref;
+    float dx = boxSDF(boxPos, rayPos + vec4(0.001, 0.0, 0.0, 0.0), boxDims) - ref;
+    float dy = boxSDF(boxPos, rayPos + vec4(0.0, 0.001, 0.0, 0.0), boxDims) - ref;
+    float dz = boxSDF(boxPos, rayPos + vec4(0.0, 0.0, 0.001, 0.0), boxDims) - ref;
     return normalize(vec3(dx, dy, dz));
 }
 
@@ -138,20 +153,22 @@ vec3 boxNormal(vec3 boxPos, vec3 rayPos, vec3 boxDims) {
 
 /// TODO: directional lighting
 // rayDir is normalized
-vec3 raymarch(vec3 rayPos, vec3 rayDir) {
-    vec3 boxPos = vec3(12.0*velocity, 0.0, 0.0);
-    vec3 boxVelocity = vec3(velocity, 0.0, 0.0);
-    float gamma = pow(1.0 - dot(boxVelocity, boxVelocity), 0.5);
-    vec3 gammaFac = normalize(boxVelocity)*gamma;
+vec3 raymarch(vec4 rayPos, vec4 rayDir) {
+    vec4 boxVelocity = minkowskiNormalize(vec4(velocity, 0.0, 0.0, 1.0));
+    vec4 boxPos =  vec4(distance * velocity, 0.0, 0.0, 0.0);
+    
+    float gamma = pow(1.0 - velocity*velocity, 0.5);
+    // TODO: diagonal motion
+    // vec4 gammaFac = normalize(boxVelocity)*gamma;
     vec3 boxDims = vec3(gamma*1.0, 1.0, 1.0);
     float len = 0.0;
 
     for (int i = 0; i < 500; i++) {
-        vec3 displacement = len * boxVelocity;
-        float sdf = 0.25 * boxSDF(boxPos - displacement, rayPos, boxDims);
+        vec4 displacement = vec4(0.717*len * velocity, 0.0, 0.0, 0.0);
+        float sdf = 0.8 * boxSDF(boxPos - displacement, rayPos, boxDims);
         
         len += abs(sdf);
-        vec3 dPos = rayDir * sdf;
+        vec4 dPos = rayDir * sdf;
         
         if (length(dPos) < 0.001) {
             // LIGHTING
@@ -160,7 +177,7 @@ vec3 raymarch(vec3 rayPos, vec3 rayDir) {
 
             float light = 0.6*(1.0 + d)*(1.0 + d) + 0.4;
             vec3 lightExponent = vec3(light*0.8, light, light);
-            lightExponent += 2.0*float(i)/100.0; // fast AO
+            lightExponent += 1.0*float(i)/100.0; // fast AO
 
             return pow(vec3(0.5, 0.8, 0.6), lightExponent);
         }
@@ -168,7 +185,7 @@ vec3 raymarch(vec3 rayPos, vec3 rayDir) {
         rayPos += dPos;
     }
 
-    return vec3(1.0, 1.0, 0.9);
+    return vec3(0.8, 0.8, 0.7);
 }
 
 void main() {
@@ -183,9 +200,9 @@ void main() {
 
     vec3 cameraPos = -distance * cameraForward;
     
-    vec3 rayDir = normalize(0.4*uv.x * cameraRight + 0.4*uv.y * cameraUp + cameraForward);
-    
-    vec3 color = raymarch(cameraPos, rayDir);
+    vec3 r = 0.4*uv.x * cameraRight + 0.4*uv.y * cameraUp + cameraForward;
+    vec4 rayDir = normalize(vec4(r.x, r.y, r.z, -1.0));
+    vec3 color = raymarch(vec4(cameraPos.x, cameraPos.y, cameraPos.z, 0.0), rayDir);
 
     // Output to screen
     gl_FragColor = vec4(color, 1.0);
