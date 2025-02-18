@@ -143,9 +143,9 @@ float boxSDF(vec4 boxPos, vec4 rayPos, vec3 boxDims) {
 
 vec3 boxNormal(vec4 boxPos, vec4 rayPos, vec3 boxDims) {
     float ref = boxSDF(boxPos, rayPos, boxDims);
-    float dx = boxSDF(boxPos, rayPos + vec4(0.001, 0.0, 0.0, 0.0), boxDims) - ref;
-    float dy = boxSDF(boxPos, rayPos + vec4(0.0, 0.001, 0.0, 0.0), boxDims) - ref;
-    float dz = boxSDF(boxPos, rayPos + vec4(0.0, 0.0, 0.001, 0.0), boxDims) - ref;
+    float dx = boxSDF(boxPos, rayPos + vec4(0.0001, 0.0, 0.0, 0.0), boxDims) - ref;
+    float dy = boxSDF(boxPos, rayPos + vec4(0.0, 0.0001, 0.0, 0.0), boxDims) - ref;
+    float dz = boxSDF(boxPos, rayPos + vec4(0.0, 0.0, 0.0001, 0.0), boxDims) - ref;
     return normalize(vec3(dx, dy, dz));
 }
 
@@ -163,9 +163,9 @@ vec3 raymarch(vec4 rayPos, vec4 rayDir) {
     vec3 boxDims = vec3(gamma*1.0, 1.0, 1.0);
     float len = 0.0;
 
-    for (int i = 0; i < 500; i++) {
-        vec4 displacement = vec4(0.717*len * velocity, 0.0, 0.0, 0.0);
-        float sdf = 0.8 * boxSDF(boxPos - displacement, rayPos, boxDims);
+    for (int i = 0; i < 1000; i++) {
+        vec4 displacement = vec4(0.717 * len * velocity, 0.0, 0.0, 0.0);
+        float sdf = 0.5*boxSDF(boxPos - displacement, rayPos, boxDims);
         
         len += abs(sdf);
         vec4 dPos = rayDir * sdf;
@@ -201,7 +201,7 @@ void main() {
     vec3 cameraPos = -distance * cameraForward;
     
     vec3 r = 0.4*uv.x * cameraRight + 0.4*uv.y * cameraUp + cameraForward;
-    vec4 rayDir = normalize(vec4(r.x, r.y, r.z, -1.0));
+    vec4 rayDir = normalize(vec4(normalize(r), -1.0));
     vec3 color = raymarch(vec4(cameraPos.x, cameraPos.y, cameraPos.z, 0.0), rayDir);
 
     // Output to screen

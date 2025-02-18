@@ -1,10 +1,19 @@
 import { Input, Slider, Stack } from "@mui/material";
 
 export const InputSlider = (props) => {
-    const {value, setValue, step, min, max} = props;
+    const {value, setValue, step, min, max, label} = props;
 
     return (
-        <Stack direction='row'>
+        <Stack
+            direction='row'
+            alignItems='center'
+            sx={{
+                color: 'white',
+                fontWeight: '600',
+                gap: '20px'
+            }}
+        >
+            {label}
             <Slider 
                 value={value}
                 step={step}
@@ -19,10 +28,11 @@ export const InputSlider = (props) => {
                 step={step}
                 min={min}
                 max={max}
-
-                onChange={(ev) => setValue(ev.target.value)}
+                onChange={(ev) => {
+                    setValue(ev.target.value)}}
                 sx={{
-                    color: 'white'
+                    color: 'white',
+                    textAlign: 'center',
                 }}
             />
         </Stack>

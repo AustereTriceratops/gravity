@@ -8,7 +8,7 @@ import {InputSlider} from "./components";
 // TODO: resizing window
 export const App = () => {
     return (
-        <TerrellRotationScene/>
+        <LightGeodesicScene/>
     );
 } 
 
@@ -116,8 +116,7 @@ const LightGeodesicScene = () => {
 
     // UI STATE
 
-    const [slider1, setSlider1] = useState(0.0);
-    const [cameraDistance, setCameraDistance] = useState(100);
+    const [rotation, setRotation] = useState(0.0);
 
     // MOUSE MOVEMENT
 
@@ -134,9 +133,9 @@ const LightGeodesicScene = () => {
         const program = programRef.current;
 
         if (program) {
-            program.render(mouseX, mouseY, slider1);
+            program.render(mouseX, mouseY, rotation);
         }
-    }, [mouseX, mouseY, slider1])
+    }, [mouseX, mouseY, rotation])
 
     return (
         <React.Fragment>
@@ -147,23 +146,19 @@ const LightGeodesicScene = () => {
                 flexDirection: 'column',
                 gap: '0.5rem',
                 backgroundColor: '#444444',
+                color: 'white',
                 opacity: '75%',
-                padding: '0.5rem',
+                paddingLeft: '1rem',
+                paddingTop: '0.5rem'
             }}
         >
+            Camera angle
             <InputSlider
-                value={slider1}
-                setValue={setSlider1}
+                value={rotation}
+                setValue={setRotation}
                 step={0.01}
                 min={0}
                 max={1}
-            />
-            <InputSlider
-                value={cameraDistance}
-                setValue={setCameraDistance}
-                step={0.01}
-                min={1}
-                max={500}
             />
         </div>
         <canvas
@@ -256,6 +251,7 @@ const TerrellRotationScene = () => {
             }}
         >
             <InputSlider
+                label='velocity'
                 value={velocity}
                 setValue={setVelocity}
                 step={0.001}
